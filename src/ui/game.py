@@ -1,4 +1,5 @@
 import pygame
+import time
 from ui.board_ui import BoardUI
 from logic.manager import Manager
 
@@ -11,6 +12,8 @@ class Game:
         self.board_ui = BoardUI(self)
         self.manager = Manager(self.board_ui)
         self.running = True
+        self.delta_time = 0
+        self.__prev_update = time.time()
 
     def render(self):
         self.screen.fill((255, 255, 255), (0, 0, self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
@@ -20,7 +23,9 @@ class Game:
         pygame.display.flip()
 
     def update(self):
-        pass
+        self.delta_time = time.time() - self.__prev_update
+        self.__prev_update = time.time()
+        self.board_ui.update()
 
     def run(self):
         while self.running:

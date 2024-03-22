@@ -1,4 +1,6 @@
-class AI:
+from logic.controller import Controller
+
+class AI(Controller):
     def __init__(self) -> None:
         pass
 
