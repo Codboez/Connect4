@@ -1,0 +1,28 @@
+[MASTER]
+
+ignore=tests
+extension-pkg-whitelist=pygame
+
+[MESSAGE CONTROL]
+disable=raw-checker-failed,
+        bad-inline-option,
+        locally-disabled,
+        file-ignored,
+        suppressed-message,
+        useless-suppression,
+        deprecated-pragma,
+        use-symbolic-message-instead,
+        missing-module-docstring,
+        missing-function-docstring,
+        missing-class-docstring,
+        too-few-public-methods,
+		missing-final-newline,
+		consider-using-enumerate
+
+[FORMAT]
+
+max-line-length=120
+
+[DESIGN]
+max-args=10
+max-attributes=10

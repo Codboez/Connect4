@@ -1,17 +1,18 @@
 class Board:
     def __init__(self) -> None:
         self.__board_list = []
-        for i in range(6):
+        for _ in range(6):
             self.__board_list.append([0]*7)
 
     def get_slot(self, x, y):
         return self.__board_list[y][x]
-    
+
     def set_slot(self, x, y, controller_number):
         self.__board_list[y][x] = controller_number
 
     def drop(self, x, controller_number):
-        """Drops a coin in to the column of the given x index, and places it in the closest available slot to the bottom.
+        """Drops a coin in to the column of the given x index, and places
+        it in the closest available slot to the bottom.
 
         Args:
             x (int): x index of the column to drop the coin in
@@ -34,7 +35,7 @@ class Board:
                 return (x, len(self.__board_list) + i)
 
         raise ValueError("Column is full")
-    
+
     def check_win(self, player):
         """Checks if the given player has won.
 
@@ -42,7 +43,8 @@ class Board:
             player (int): Which player to check the win for. 1 for player 1. 2 for player 2.
 
         Returns:
-            tuple: Contains 2 tuples. The winning line's start and end positions. Returns None if given player has not won.
+            tuple: Contains 2 tuples. The winning line's start and end positions.
+            Returns None if given player has not won.
         """
 
         for y in range(len(self.__board_list)):
@@ -51,6 +53,8 @@ class Board:
 
                 if line_end is not None:
                     return ((x, y), line_end)
+
+        return None
 
     def four_in_line_from(self, player, x_index, y_index):
         """Checks if given player has connected four in any direction starting from the given indices.
@@ -67,21 +71,21 @@ class Board:
         line_end = self.__four_in_line_right(player, x_index, y_index)
         if line_end is not None:
             return line_end
-        
+
         line_end = self.__four_in_line_down(player, x_index, y_index)
         if line_end is not None:
             return line_end
-        
+
         line_end = self.__four_in_line_down_right(player, x_index, y_index)
         if line_end is not None:
             return line_end
-        
+
         line_end = self.__four_in_line_up_right(player, x_index, y_index)
         if line_end is not None:
             return line_end
-        
+
         return None
-        
+
     def __four_in_line_right(self, player, x_index, y_index):
         for i in range(4):
             if x_index + i >= len(self.__board_list[y_index]):
