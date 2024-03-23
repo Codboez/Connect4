@@ -166,7 +166,7 @@ class BoardUI:
         return int(pos_x // self.__column_size)
 
     def drop(self, pos, controller_number):
-        """Trys to drop a coin based on the given mouse position.
+        """Tries to drop a coin based on the given mouse position.
 
         Args:
             pos (tuple): The current mouse position.
@@ -177,12 +177,23 @@ class BoardUI:
         """
 
         x = self.get_column(pos)
+        return self.drop_to_column(x, controller_number)
 
-        if x == -1:
+    def drop_to_column(self, column, controller_number):
+        """Tries to drop a coin in the given column.
+
+        Args:
+            column (int): The index of the column to drop a coin into.
+            controller_number (int): The index of the controller whose color to get. 1 for player 1. 2 for player 2.
+
+        Returns:
+            bool: If a drop was completed.
+        """
+        if column == -1:
             return False
 
         try:
-            board_indices = self.board.drop(x, controller_number)
+            board_indices = self.board.drop(column, controller_number)
             self.__active_coins[board_indices] = 50
         except ValueError:
             return False

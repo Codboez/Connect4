@@ -125,3 +125,16 @@ class Board:
                 return None
 
         return (x_index + 3, y_index - 3)
+
+    def copy(self):
+        copy_board = Board()
+
+        copy_list = []
+        for row in self.__board_list:
+            copy_list.append(row.copy())
+
+        copy_board.__board_list = copy_list # pylint: disable=protected-access,unused-private-member
+        return copy_board
+
+    def __repr__(self):
+        return self.__board_list.__repr__()
