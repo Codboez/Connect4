@@ -1,4 +1,5 @@
 import threading
+import random
 from src.logic.controller import Controller
 from src.logic.game_state import GameState
 
@@ -16,12 +17,13 @@ class AI(Controller):
     def calculate_best_move(self):
         best_list = []
         for i in range(7):
-            best = self.minimax(1, 2, [i])
+            best = self.minimax(1, 3, [i])
             best_list.append(best)
 
         best_move = self.get_index_of_best(best_list)
         self.__board_ui.drop_to_column(best_move, self.__index)
         self.__manager.end_turn()
+        print()
 
     def minimax(self, k, n, done_moves):
         if k == n:
@@ -40,6 +42,7 @@ class AI(Controller):
             new_done_moves.append(i)
             value = self.minimax(k + 1, n, new_done_moves)
             best = max(best, value) if k % 2 == 0 else min(best, value)
+            print(value)
 
         return 0 if best == 10**5 else best
 
@@ -48,5 +51,9 @@ class AI(Controller):
         for i in range(len(best_list)):
             if best_list[i] > best[0]:
                 best = (best_list[i], i)
+
+        if best[1] == -1:
+            legal_moves = self.__board.get_legal_moves()
+            return legal_moves[random.randint(0, len(legal_moves) - 1)]
 
         return best[1]

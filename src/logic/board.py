@@ -49,10 +49,10 @@ class Board:
 
         for y in range(len(self.__board_list)):
             for x in range(len(self.__board_list[y])):
-                line_end = self.four_in_line_from(player, x, y)
+                line = self.four_in_line_from(player, x, y)
 
-                if line_end is not None:
-                    return ((x, y), line_end)
+                if line is not None:
+                    return line
 
         return None
 
@@ -65,66 +65,27 @@ class Board:
             y_index (int): y index of the checked position.
 
         Returns:
-            tuple: The indices of the position where the winning line ends. Returns None if winning line not found.
+            tuple: Contains 2 tuples. The winning line's start and end positions.
+            Returns None if four in line not found.
         """
 
-        line_end = self.__four_in_line_right(player, x_index, y_index)
-        if line_end is not None:
-            return line_end
+        line = self.__four_in_line_horizontal(player, y_index)
+        if line is not None:
+            return line
 
-        line_end = self.__four_in_line_down(player, x_index, y_index)
-        if line_end is not None:
-            return line_end
+        line = self.__four_in_line_vertical(player, x_index)
+        if line is not None:
+            return line
 
-        line_end = self.__four_in_line_down_right(player, x_index, y_index)
-        if line_end is not None:
-            return line_end
+        line = self.__four_in_line_diagonal_1(player, x_index, y_index)
+        if line is not None:
+            return line
 
-        line_end = self.__four_in_line_up_right(player, x_index, y_index)
-        if line_end is not None:
-            return line_end
+        line = self.__four_in_line_diagonal_2(player, x_index, y_index)
+        if line is not None:
+            return line
 
         return None
-
-    def __four_in_line_right(self, player, x_index, y_index):
-        for i in range(4):
-            if x_index + i >= len(self.__board_list[y_index]):
-                return None
-
-            if self.__board_list[y_index][x_index + i] != player:
-                return None
-
-        return (x_index + 3, y_index)
-
-    def __four_in_line_down(self, player, x_index, y_index):
-        for i in range(4):
-            if y_index + i >= len(self.__board_list):
-                return None
-
-            if self.__board_list[y_index + i][x_index] != player:
-                return None
-
-        return (x_index, y_index + 3)
-
-    def __four_in_line_down_right(self, player, x_index, y_index):
-        for i in range(4):
-            if x_index + i >= len(self.__board_list[y_index]) or y_index + i >= len(self.__board_list):
-                return None
-
-            if self.__board_list[y_index + i][x_index + i] != player:
-                return None
-
-        return (x_index + 3, y_index + 3)
-
-    def __four_in_line_up_right(self, player, x_index, y_index):
-        for i in range(4):
-            if x_index + i >= len(self.__board_list[y_index]) or y_index - i < 0:
-                return None
-
-            if self.__board_list[y_index - i][x_index + i] != player:
-                return None
-
-        return (x_index + 3, y_index - 3)
 
     def copy(self):
         copy_board = Board()
@@ -138,3 +99,88 @@ class Board:
 
     def __repr__(self):
         return self.__board_list.__repr__()
+
+    def __four_in_line_horizontal(self, player, y_index):
+        row = self.__board_list[y_index]
+        indices = self.__list_contains_4(row, player)
+
+        if indices is None:
+            return None
+
+        return ((indices[0], y_index), (indices[1], y_index))
+
+    def __four_in_line_vertical(self, player, x_index):
+        column = []
+        for row in self.__board_list:
+            column.append(row[x_index])
+
+        indices = self.__list_contains_4(column, player)
+
+        if indices is None:
+            return None
+
+        return ((x_index, indices[0]), (x_index, indices[1]))
+
+    def __four_in_line_diagonal_1(self, player, x_index, y_index):
+        i = min(x_index, y_index)
+
+        diagonal_list = []
+        j = 0
+        while x_index - i + j < 7 and y_index - i + j < 6:
+            diagonal_list.append(self.__board_list[y_index - i + j][x_index - i + j])
+            j += 1
+
+        indices = self.__list_contains_4(diagonal_list, player)
+
+        if indices is None:
+            return None
+
+        line_start = (x_index - i + indices[0], y_index - i + indices[0])
+        line_end = (x_index - i + indices[1], y_index - i + indices[1])
+        return (line_start, line_end)
+
+    def __four_in_line_diagonal_2(self, player, x_index, y_index):
+        i = 0
+        while x_index - i > 0 and y_index + i < 5:
+            i += 1
+
+        diagonal_list = []
+        j = 0
+        while x_index - i + j < 7 and y_index + i - j >= 0:
+            diagonal_list.append(self.__board_list[y_index + i - j][x_index - i + j])
+            j += 1
+
+        indices = self.__list_contains_4(diagonal_list, player)
+
+        if indices is None:
+            return None
+
+        line_start = (x_index - i + indices[0], y_index + i - indices[0])
+        line_end = (x_index - i + indices[1], y_index + i - indices[1])
+        return (line_start, line_end)
+
+    def __list_contains_4(self, t: list, of):
+        count = 0
+        start = -1
+        end = -1
+        for i in range(len(t)):
+            if t[i] == of:
+                count += 1
+            else:
+                count = 0
+
+            if count == 1:
+                start = i
+            elif count == 4:
+                end = i
+                return (start, end)
+
+        return None
+
+    def get_legal_moves(self):
+        moves = []
+        for i in range(7):
+            if self.__board_list[0][i] == 0:
+                moves.append(i)
+
+        return moves
