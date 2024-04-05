@@ -17,15 +17,16 @@ class AI(Controller):
     def calculate_best_move(self):
         best_list = []
         for i in range(7):
-            best = self.minimax(1, 3, [i])
-            best_list.append(best)
+            alpha = -10**6
+            value = self.minimax(1, 7, [i], alpha, 10**6)
+            alpha = max(alpha, value)
+            best_list.append(value)
 
         best_move = self.get_index_of_best(best_list)
         self.__board_ui.drop_to_column(best_move, self.__index)
         self.__manager.end_turn()
-        print()
 
-    def minimax(self, k, n, done_moves):
+    def minimax(self, k, n, done_moves, alpha, beta):
         if k == n:
             game_state = GameState()
 
@@ -40,9 +41,16 @@ class AI(Controller):
         for i in range(7):
             new_done_moves = done_moves.copy()
             new_done_moves.append(i)
-            value = self.minimax(k + 1, n, new_done_moves)
+            value = self.minimax(k + 1, n, new_done_moves, alpha, beta)
             best = max(best, value) if k % 2 == 0 else min(best, value)
-            print(value)
+            
+            if k % 2 == 0:
+                alpha = max(alpha, value)
+            else:
+                beta = min(beta, value)
+
+            if alpha >= beta:
+                break
 
         return 0 if best == 10**5 else best
 
