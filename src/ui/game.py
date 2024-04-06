@@ -45,5 +45,6 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+                self.manager.close_all_other_threads()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.manager.mouse_down(event.pos)

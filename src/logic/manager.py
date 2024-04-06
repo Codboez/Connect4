@@ -4,9 +4,10 @@ from src.logic.ai import AI
 class Manager:
     def __init__(self, board_ui) -> None:
         self.__board_ui = board_ui
-        self.controllers = [Player(), AI(2, self.__board_ui, self)]
+        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 7)]
         self.current_turn = 0
         self.active = True
+        self.set_turn(0)
 
     def mouse_down(self, pos):
         """This is called when mouse is clicked. Advances the game if it was a player's turn.
@@ -19,8 +20,8 @@ class Manager:
             return
 
         if isinstance(self.controllers[self.current_turn], Player):
-            if self.__board_ui.drop(pos, self.current_turn + 1):
-                self.end_turn()
+            column = self.__board_ui.get_column(pos)
+            self.end_turn(column)
 
     def set_turn(self, turn):
         """Gives the turn to the given controller index.
@@ -33,9 +34,15 @@ class Manager:
         if isinstance(self.controllers[turn], AI):
             self.controllers[turn].start_turn()
 
-    def end_turn(self):
+    def end_turn(self, column):
         """Ends the current controller's turn. Ends the game upon win. Gives the other controller the turn otherwise.
+
+        Args:
+            column (int): The index of the column to drop a coin into.
         """
+        if not self.__board_ui.drop_to_column(column, self.current_turn + 1):
+            return
+
         winning_line = self.__board_ui.board.check_win(self.current_turn + 1)
 
         if winning_line is None:
@@ -43,3 +50,10 @@ class Manager:
         else:
             self.__board_ui.winning_line = winning_line
             self.active = False
+
+    def close_all_other_threads(self):
+        if isinstance(self.controllers[0], AI):
+            self.controllers[0].stop_ai_thread = True
+
+        if isinstance(self.controllers[1], AI):
+            self.controllers[1].stop_ai_thread = True
