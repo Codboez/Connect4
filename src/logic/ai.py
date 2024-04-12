@@ -13,10 +13,23 @@ class AI(Controller):
         self.set_max_depth(max_depth)
 
     def start_turn(self):
+        """Starts the AI's calculations for its move. The calculations will be done in a new thread.
+        """
         ai_thread = threading.Thread(target=self.calculate_best_move)
         ai_thread.start()
 
     def calculate_best_move(self):
+        """Calculates the best possible move the AI can make and drops a coin there.
+        """
+        best_move = self.start_minimax()
+        self.__manager.end_turn(best_move)
+
+    def start_minimax(self):
+        """Starts the minimax algorithm.
+
+        Returns:
+            int: The index of the column the best move was found in.
+        """
         best_list = []
         alpha = -10**6
         for i in range(7):
@@ -30,18 +43,23 @@ class AI(Controller):
             best_list.append(value)
 
         best_move = self.get_index_of_best(best_list)
-        self.__manager.end_turn(best_move)
+        return best_move
 
-    def minimax(self, k, n, done_moves, alpha, beta):
-        if k == n:
-            game_state = GameState()
+    def minimax(self, depth, max_depth, done_moves, alpha, beta):
+        """The minimax algorithm. Calculates the best possible move the AI can make.
 
-            try:
-                value = game_state.calculate_value_for_player(self.__index, self.__board, done_moves)
-            except ValueError:
-                return None
+        Args:
+            depth (int): The current depth.
+            max_depth (int): The maximum depth
+            done_moves (list): List of moves (column indices) that are going to be evaluated.
+            alpha (int): The alpha value for alpha-beta pruning.
+            beta (int): The beta value for alpha-beta pruning.
 
-            return value
+        Returns:
+            int: The value of the best move.
+        """
+        if depth == max_depth:
+            return self.calculate_value_for_game_state(done_moves)
 
         best = None
 
@@ -51,7 +69,7 @@ class AI(Controller):
 
             new_done_moves = done_moves.copy()
             new_done_moves.append(i)
-            value = self.minimax(k + 1, n, new_done_moves, alpha, beta)
+            value = self.minimax(depth + 1, max_depth, new_done_moves, alpha, beta)
 
             if value is None:
                 continue
@@ -59,9 +77,12 @@ class AI(Controller):
             if best is None:
                 best = value
 
-            best = max(best, value) if k % 2 == 0 else min(best, value)
+            best = max(best, value) if depth % 2 == 0 else min(best, value)
 
-            if k % 2 == 0:
+            if value is None:
+                continue
+
+            if depth % 2 == 0:
                 alpha = max(alpha, value)
             else:
                 beta = min(beta, value)
@@ -70,9 +91,35 @@ class AI(Controller):
                 break
 
         return best
+    
+    def calculate_value_for_game_state(self, moves):
+        """Calculates the value of the state of the game based on the given moves.
+
+        Args:
+            moves (int): List of moves (column indices) that are being evaluated.
+
+        Returns:
+            int: The value for the AI.
+        """
+        game_state = GameState()
+
+        try:
+            value = game_state.calculate_value_for_player(self.__index, self.__board, moves)
+        except ValueError:
+            return None
+
+        return value
 
     def get_index_of_best(self, best_list):
-        best = (0, -1)
+        """Get the column index for the best move. 
+
+        Args:
+            best_list (list): List of values for each move
+
+        Returns:
+            int: The column index of the best move.
+        """
+        best = (-10000, -1)
         for i in range(len(best_list)):
             if best_list[i] is None:
                 continue

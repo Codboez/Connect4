@@ -246,3 +246,44 @@ class TestBoard(unittest.TestCase):
         winning_line = self.board.four_in_line_from(2, 0, 4)
 
         self.assertEqual(winning_line, None)
+
+    def test_counts_lines_correctly(self):
+        self.board.drop(1, 1)
+        self.board.drop(2, 2)
+        self.board.drop(2, 1)
+        self.board.drop(3, 2)
+        self.board.drop(3, 2)
+        self.board.drop(3, 1)
+        self.board.drop(4, 2)
+        self.board.drop(4, 2)
+        self.board.drop(4, 2)
+
+        lines = self.board.count_lines_from(4, 3)
+
+        self.assertEqual(lines, [0, 0, 0, 2, 2, 0])
+
+    def test_counts_lines_correctly_2(self):
+        self.board.drop(3, 1)
+        self.board.drop(2, 2)
+        self.board.drop(3, 1)
+        self.board.drop(2, 2)
+        self.board.drop(3, 1)
+        self.board.drop(6, 2)
+        self.board.drop(3, 1)
+
+        lines = self.board.count_lines_from(3, 2)
+
+        self.assertEqual(lines, [1, 1, 1, 0, 0, 0])
+
+    def test_counts_lines_correctly_3(self):
+        self.board.drop(3, 1)
+        self.board.drop(1, 2)
+        self.board.drop(3, 1)
+        self.board.drop(1, 2)
+        self.board.drop(3, 1)
+        self.board.drop(6, 2)
+        self.board.drop(3, 1)
+
+        lines = self.board.count_lines_from(3, 2)
+
+        self.assertEqual(lines, [1, 1, 1, 0, 0, 0])

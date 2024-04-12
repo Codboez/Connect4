@@ -4,7 +4,7 @@ from src.logic.ai import AI
 class Manager:
     def __init__(self, board_ui) -> None:
         self.__board_ui = board_ui
-        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 7)]
+        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 5)]
         self.current_turn = 0
         self.active = True
         self.set_turn(0)
@@ -52,6 +52,8 @@ class Manager:
             self.active = False
 
     def close_all_other_threads(self):
+        """Closes all AI threads.
+        """
         if isinstance(self.controllers[0], AI):
             self.controllers[0].stop_ai_thread = True
 

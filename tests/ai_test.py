@@ -7,7 +7,7 @@ class TestAI(unittest.TestCase):
     def setUp(self):
         self.board = Board()
         self.manager = StubManager()
-        self.ai = AI(2, self.board, self.manager, 6)
+        self.ai = AI(2, self.board, self.manager, 3)
 
     def test_ai_does_not_help_opponent(self):
         self.board.drop(0, 2)

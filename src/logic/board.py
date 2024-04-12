@@ -1,3 +1,5 @@
+import re
+
 class Board:
     def __init__(self) -> None:
         self.__board_list = []
@@ -88,6 +90,11 @@ class Board:
         return None
 
     def copy(self):
+        """Makes a copy of this board.
+
+        Returns:
+            Board: The new copy of this board.
+        """
         copy_board = Board()
 
         copy_list = []
@@ -158,6 +165,37 @@ class Board:
         line_start = (x_index - i + indices[0], y_index + i - indices[0])
         line_end = (x_index - i + indices[1], y_index + i - indices[1])
         return (line_start, line_end)
+    
+    def __get_vertical_list(self, x_index):
+        column = []
+        for row in self.__board_list:
+            column.append(row[x_index])
+
+        return column
+    
+    def __get_diagonal_1_list(self, x_index, y_index):
+        i = min(x_index, y_index)
+
+        diagonal_list = []
+        j = 0
+        while x_index - i + j < 7 and y_index - i + j < 6:
+            diagonal_list.append(self.__board_list[y_index - i + j][x_index - i + j])
+            j += 1
+
+        return diagonal_list
+    
+    def __get_diagonal_2_list(self, x_index, y_index):
+        i = 0
+        while x_index - i > 0 and y_index + i < 5:
+            i += 1
+
+        diagonal_list = []
+        j = 0
+        while x_index - i + j < 7 and y_index + i - j >= 0:
+            diagonal_list.append(self.__board_list[y_index + i - j][x_index - i + j])
+            j += 1
+
+        return diagonal_list
 
     def __list_contains_4(self, t: list, of):
         count = 0
@@ -176,8 +214,59 @@ class Board:
                 return (start, end)
 
         return None
+    
+    def count_lines_from(self, x_index, y_index):
+        horizontal_list = self.__board_list[y_index]
+        horizontal_lines = self.__count_lines(horizontal_list)
+
+        vertical_list = self.__get_vertical_list(x_index)
+        vertical_lines = self.__count_lines(vertical_list)
+
+        diagonal_1_list = self.__get_diagonal_1_list(x_index, y_index)
+        diagonal_1_lines = self.__count_lines(diagonal_1_list)
+
+        diagonal_2_list = self.__get_diagonal_2_list(x_index, y_index)
+        diagonal_2_lines = self.__count_lines(diagonal_2_list)
+
+        return [sum(counts) for counts in zip(horizontal_lines, vertical_lines, diagonal_1_lines, diagonal_2_lines)]
+    
+    def __count_lines(self, t: list):
+        p1_2 = 0
+        p1_3 = 0
+        p1_4 = 0
+        p2_2 = 0
+        p2_3 = 0
+        p2_4 = 0
+
+        for i in range(len(t) - 3):
+            line = "".join(str(x) for x in t[i:i+4])
+
+            if len(re.findall("1", line)) == 2 and len(re.findall("0", line)) == 2:
+                p1_2 += 1
+
+            if len(re.findall("1", line)) == 3 and len(re.findall("0", line)) == 1:
+                p1_3 += 1
+
+            if len(re.findall("1", line)) == 4:
+                p1_4 += 1
+
+            if len(re.findall("2", line)) == 2 and len(re.findall("0", line)) == 2:
+                p2_2 += 1
+
+            if len(re.findall("2", line)) == 3 and len(re.findall("0", line)) == 1:
+                p2_3 += 1
+
+            if len(re.findall("2", line)) == 4:
+                p2_4 += 1
+
+        return (p1_2, p1_3, p1_4, p2_2, p2_3, p2_4)
 
     def get_legal_moves(self):
+        """Returns list of all currently possible moves.
+
+        Returns:
+            list: The list of all currently possible moves.
+        """
         moves = []
         for i in range(7):
             if self.__board_list[0][i] == 0:
