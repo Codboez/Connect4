@@ -329,3 +329,13 @@ class TestBoard(unittest.TestCase):
         copy.drop(1, 1)
 
         self.assertEqual(self.board.get_slot(1, 4), 0)
+
+    def test_check_win_finds_winning_line(self):
+        self.board.drop(1, 1)
+        self.board.drop(2, 1)
+        self.board.drop(3, 1)
+        self.board.drop(4, 1)
+
+        winning_line = self.board.check_win(1)
+
+        self.assertEqual(winning_line, ((1, 5), (4, 5)))
