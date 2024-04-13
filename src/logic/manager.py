@@ -4,7 +4,7 @@ from src.logic.ai import AI
 class Manager:
     def __init__(self, board_ui) -> None:
         self.__board_ui = board_ui
-        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 6)]
+        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 7)]
         self.current_turn = 0
         self.active = True
         self.set_turn(0)
