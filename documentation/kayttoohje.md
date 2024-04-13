@@ -6,7 +6,7 @@ poetry install
 ```
 2. Käynnistä ohjelma pakettina komennolla
 ```
-python -m src
+poetry run python -m src
 ```
 
 ## Ohjelman käyttö
