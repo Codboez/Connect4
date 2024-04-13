@@ -258,9 +258,9 @@ class TestBoard(unittest.TestCase):
         self.board.drop(4, 2)
         self.board.drop(4, 2)
 
-        lines = self.board.count_lines_from(4, 3)
+        lines = self.board.count_lines_from(4, 3, 2)
 
-        self.assertEqual(lines, [0, 0, 0, 2, 2, 0])
+        self.assertEqual(lines, [2, 2, 0])
 
     def test_counts_lines_correctly_2(self):
         self.board.drop(3, 1)
@@ -271,9 +271,9 @@ class TestBoard(unittest.TestCase):
         self.board.drop(6, 2)
         self.board.drop(3, 1)
 
-        lines = self.board.count_lines_from(3, 2)
+        lines = self.board.count_lines_from(3, 2, 1)
 
-        self.assertEqual(lines, [1, 1, 1, 0, 0, 0])
+        self.assertEqual(lines, [1, 1, 1])
 
     def test_counts_lines_correctly_3(self):
         self.board.drop(3, 1)
@@ -284,6 +284,48 @@ class TestBoard(unittest.TestCase):
         self.board.drop(6, 2)
         self.board.drop(3, 1)
 
-        lines = self.board.count_lines_from(3, 2)
+        lines = self.board.count_lines_from(3, 2, 1)
 
-        self.assertEqual(lines, [1, 1, 1, 0, 0, 0])
+        self.assertEqual(lines, [1, 1, 1])
+
+    def test_drop_drops_a_coin_to_the_correct_height(self):
+        self.board.set_slot(3, 5, 2)
+        self.board.set_slot(3, 4, 2)
+
+        self.board.drop(3, 1)
+
+        self.assertEqual(self.board.get_slot(3, 3), 1)
+
+    def test_drop_raises_value_error_when_column_is_full(self):
+        for _ in range(6):
+            self.board.drop(2, 1)
+
+        self.assertRaises(ValueError, self.board.drop, 2, 1)
+
+    def test_gets_legal_moves_correctly(self):
+        for i in range(0, 7, 2):
+            for _ in range(6):
+                self.board.drop(i, 1)
+
+        legal_moves = self.board.get_legal_moves()
+
+        self.assertListEqual(legal_moves, [1, 3, 5])
+
+    def test_board_copies_itself_correctly(self):
+        self.board.drop(1, 2)
+        self.board.drop(2, 1)
+        self.board.drop(2, 2)
+
+        copy = self.board.copy()
+
+        for y in range(6):
+            for x in range(7):
+                self.assertEqual(copy.get_slot(x, y), self.board.get_slot(x, y))
+
+    def test_modifying_copied_board_does_not_modify_original(self):
+        self.board.drop(1, 2)
+
+        copy = self.board.copy()
+        copy.drop(1, 1)
+
+        self.assertEqual(self.board.get_slot(1, 4), 0)

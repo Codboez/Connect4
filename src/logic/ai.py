@@ -4,19 +4,23 @@ from src.logic.controller import Controller
 from src.logic.game_state import GameState
 
 class AI(Controller):
-    def __init__(self, index, board, manager, max_depth) -> None:
+    def __init__(self, index, board, manager, max_depth, use_alpha_beta=True) -> None:
         self.__index = index
         self.__board = board
         self.__manager = manager
         self.__max_depth = 1
         self.stop_ai_thread = False
+        self.use_alpha_beta = use_alpha_beta
         self.set_max_depth(max_depth)
 
-    def start_turn(self):
+    def start_turn(self, create_new_thread = True):
         """Starts the AI's calculations for its move. The calculations will be done in a new thread.
         """
-        ai_thread = threading.Thread(target=self.calculate_best_move)
-        ai_thread.start()
+        if create_new_thread:
+            ai_thread = threading.Thread(target=self.calculate_best_move)
+            ai_thread.start()
+        else:
+            self.calculate_best_move()
 
     def calculate_best_move(self):
         """Calculates the best possible move the AI can make and drops a coin there.
@@ -32,15 +36,15 @@ class AI(Controller):
         """
         best_list = []
         alpha = -10**6
-        for i in range(7):
+        for i in self.get_move_order():
             value = self.minimax(1, self.__max_depth, [i], alpha, 10**6)
 
             if value is None:
-                best_list.append(value)
+                best_list.append((value, i))
                 continue
 
             alpha = max(alpha, value)
-            best_list.append(value)
+            best_list.append((value, i))
 
         best_move = self.get_index_of_best(best_list)
         return best_move
@@ -63,7 +67,7 @@ class AI(Controller):
 
         best = None
 
-        for i in range(7):
+        for i in self.get_move_order():
             if self.stop_ai_thread:
                 return None
 
@@ -79,19 +83,16 @@ class AI(Controller):
 
             best = max(best, value) if depth % 2 == 0 else min(best, value)
 
-            if value is None:
-                continue
-
             if depth % 2 == 0:
                 alpha = max(alpha, value)
             else:
                 beta = min(beta, value)
 
-            if alpha >= beta:
+            if self.use_alpha_beta and alpha >= beta:
                 break
 
         return best
-    
+
     def calculate_value_for_game_state(self, moves):
         """Calculates the value of the state of the game based on the given moves.
 
@@ -121,14 +122,13 @@ class AI(Controller):
         """
         best = (-10000, -1)
         for i in range(len(best_list)):
-            if best_list[i] is None:
+            if best_list[i][0] is None:
                 continue
 
-            if best_list[i] > best[0]:
-                best = (best_list[i], i)
+            if best_list[i][0] > best[0]:
+                best = (best_list[i][0], best_list[i][1])
 
         if best[1] == -1:
-            print("Every move resulted in a loss (assuming player plays perfectly). Random move chosen.")
             legal_moves = self.__board.get_legal_moves()
             return legal_moves[random.randint(0, len(legal_moves) - 1)]
 
@@ -139,3 +139,6 @@ class AI(Controller):
             raise ValueError("Maximum depth cannot be less than 1.")
 
         self.__max_depth = depth
+
+    def get_move_order(self):
+        return [3, 2, 4, 1, 5, 0, 6]

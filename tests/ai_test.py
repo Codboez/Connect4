@@ -1,4 +1,7 @@
 import unittest
+import hypothesis.strategies as strategies
+from hypothesis import given, settings
+import timeit
 import time
 from src.logic.ai import AI
 from src.logic.board import Board
@@ -86,12 +89,6 @@ class TestAI(unittest.TestCase):
 
         self.assertNotEqual(column, 1)
 
-    # This test was testing a bug that turned out to not be a bug in the AI's current form.
-    # The AI knows it is going to lose in the future no matter which move it chooses (assuming the player plays perfectly).
-    # This means the AI gave up and chose a random move.
-    # This test can however be used in the future once the AI is improved.
-    # The AI notices that it is going to lose only if depth >= 6.
-    """
     def test_ai_does_not_help_opponent_3(self):
         self.board.drop(0, 2)
         self.board.drop(0, 2)
@@ -120,9 +117,7 @@ class TestAI(unittest.TestCase):
         column = self.ai_choose_column(ai)
 
         self.assertNotEqual(column, 4)
-    """
 
-    # Currently it chooses a legal move but a random one.
     def test_ai_chooses_legal_move_when_depth_exceeds_amount_of_open_slots(self):
         for i in range(7):
             for j in range(6):
@@ -188,6 +183,43 @@ class TestAI(unittest.TestCase):
         column = self.ai_choose_column(ai)
 
         self.assertIn(column, [4, 5])
+
+    def test_minimax_returns_none_when_checking_illegal_move(self):
+        for _ in range(6):
+            self.board.drop(0, 1)
+
+        value = self.ai.minimax(3, 3, [5, 3, 0], -10000, 10000)
+
+        self.assertIsNone(value)
+
+    @given(moves=strategies.lists(strategies.integers(min_value=0, max_value=6), min_size=0, max_size=30))
+    @settings(max_examples=20, deadline=None)
+    def test_alpha_beta_pruning_makes_minimax_faster(self, moves):
+        board = Board()
+        counts = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0}
+        for i in range(len(moves)):
+            if counts[moves[i]] < 6:
+                board.drop(moves[i], (i % 2) + 1)
+                counts[moves[i]] += 1
+
+        board_copy = board.copy()
+        ai_no_pruning = AI(2, board, self.manager, 3, False)
+        ai_with_pruning = AI(2, board_copy, self.manager, 3)
+
+        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=5)
+        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=5)
+
+        self.assertGreaterEqual(no_pruning_time, with_pruning_time)
+
+    def test_alpha_beta_pruning_with_high_depth_makes_minimax_much_faster(self):
+        board_copy = self.board.copy()
+        ai_no_pruning = AI(2, self.board, self.manager, 5, False)
+        ai_with_pruning = AI(2, board_copy, self.manager, 5)
+
+        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=3)
+        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=3)
+
+        self.assertGreaterEqual(no_pruning_time / 10, with_pruning_time)
 
     def ai_choose_column(self, ai: AI):
         ai.start_turn()

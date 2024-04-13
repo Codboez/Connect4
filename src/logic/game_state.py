@@ -20,16 +20,20 @@ class GameState:
         for i in range(len(moves)):
             next_player = player if i % 2 == 0 else other_player
             drop_location = new_board.drop(moves[i], next_player)
-            
-            lines = new_board.count_lines_from(drop_location[0], drop_location[1])
 
-            if lines[3 * (player - 1) + 2] > 0:
-                return score + 1000
-            
-            if lines[3 * (other_player - 1) + 2] > 0:
-                return score - 1000
-            
-            score += lines[3 * (player - 1) + 1] * 5
-            score += lines[3 * (player - 1)]
+            lines = new_board.count_lines_from(drop_location[0], drop_location[1], next_player)
+
+            if next_player == player:
+                score += lines[1] * 5
+                score += lines[0]
+
+                if lines[2] > 0:
+                    return score + 1000
+            else:
+                score -= lines[1] * 5
+                score -= lines[0]
+
+                if lines[2] > 0:
+                    return score - 1000
 
         return score
