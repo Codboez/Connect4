@@ -309,7 +309,7 @@ class TestBoard(unittest.TestCase):
 
         legal_moves = self.board.get_legal_moves()
 
-        self.assertListEqual(legal_moves, [1, 3, 5])
+        self.assertListEqual(legal_moves, [3, 1, 5])
 
     def test_board_copies_itself_correctly(self):
         self.board.drop(1, 2)

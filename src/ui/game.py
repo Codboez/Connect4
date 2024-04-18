@@ -2,6 +2,7 @@ import time
 import pygame
 from src.ui.board_ui import BoardUI
 from src.logic.manager import Manager
+from src.ui.visualizer import Visualizer
 
 class Game:
     def __init__(self) -> None:
@@ -9,8 +10,10 @@ class Game:
         self.screen_width = 960
         self.screen_height = 720
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.font = pygame.font.SysFont("timesnewroman", 12)
         self.board_ui = BoardUI(self)
-        self.manager = Manager(self.board_ui)
+        self.visualizer = Visualizer(self, False)
+        self.manager = Manager(self.board_ui, self.visualizer)
         self.running = True
         self.delta_time = 0
         self.__prev_update = time.time()
@@ -21,6 +24,7 @@ class Game:
         self.screen.fill((255, 255, 255), (0, 0, self.screen_width, self.screen_height))
 
         self.board_ui.render(self.screen)
+        self.visualizer.render(self.screen)
 
         pygame.display.flip()
 

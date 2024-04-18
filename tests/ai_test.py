@@ -10,7 +10,8 @@ class TestAI(unittest.TestCase):
     def setUp(self):
         self.board = Board()
         self.manager = StubManager()
-        self.ai = AI(2, self.board, self.manager, 3)
+        self.visualizer = StubVisualizer()
+        self.ai = AI(2, self.board, self.manager, 3, self.visualizer)
 
     def test_ai_does_not_help_opponent(self):
         self.board.drop(0, 2)
@@ -113,7 +114,7 @@ class TestAI(unittest.TestCase):
 
         self.board.drop(5, 1)
 
-        ai = AI(2, self.board, self.manager, 6)
+        ai = AI(2, self.board, self.manager, 6, self.visualizer)
         column = self.ai_choose_column(ai)
 
         self.assertNotEqual(column, 4)
@@ -179,7 +180,7 @@ class TestAI(unittest.TestCase):
 
         self.board.drop(5, 1)
 
-        ai = AI(1, self.board, self.manager, 6)
+        ai = AI(1, self.board, self.manager, 6, self.visualizer)
         column = self.ai_choose_column(ai)
 
         self.assertIn(column, [4, 5])
@@ -203,8 +204,8 @@ class TestAI(unittest.TestCase):
                 counts[moves[i]] += 1
 
         board_copy = board.copy()
-        ai_no_pruning = AI(2, board, self.manager, 3, False)
-        ai_with_pruning = AI(2, board_copy, self.manager, 3)
+        ai_no_pruning = AI(2, board, self.manager, 3, self.visualizer, False)
+        ai_with_pruning = AI(2, board_copy, self.manager, 3, self.visualizer)
 
         no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=5)
         with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=5)
@@ -213,8 +214,8 @@ class TestAI(unittest.TestCase):
 
     def test_alpha_beta_pruning_with_high_depth_makes_minimax_much_faster(self):
         board_copy = self.board.copy()
-        ai_no_pruning = AI(2, self.board, self.manager, 5, False)
-        ai_with_pruning = AI(2, board_copy, self.manager, 5)
+        ai_no_pruning = AI(2, self.board, self.manager, 5, self.visualizer, False)
+        ai_with_pruning = AI(2, board_copy, self.manager, 5, self.visualizer)
 
         no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=3)
         with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=3)
@@ -243,3 +244,13 @@ class StubManager:
     def end_turn(self, column):
         self.end_turn_called_count += 1
         self.end_turn_column_arg = column
+
+class StubVisualizer:
+    def add_node(self, a, b):
+        pass
+
+    def add_value(self, a, b, c):
+        pass
+
+    def set_enabled(self, a):
+        pass

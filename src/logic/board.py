@@ -344,8 +344,11 @@ class Board:
             list: The list of all currently possible moves.
         """
         moves = []
-        for i in range(7):
+        for i in self.get_move_order():
             if self.__board_list[0][i] == 0:
                 moves.append(i)
 
         return moves
+
+    def get_move_order(self):
+        return [3, 2, 4, 1, 5, 0, 6]

@@ -4,13 +4,14 @@ from src.logic.controller import Controller
 from src.logic.game_state import GameState
 
 class AI(Controller):
-    def __init__(self, index, board, manager, max_depth, use_alpha_beta=True) -> None:
+    def __init__(self, index, board, manager, max_depth, visualizer, use_alpha_beta=True) -> None:
         self.__index = index
         self.__board = board
         self.__manager = manager
         self.__max_depth = 1
         self.stop_ai_thread = False
         self.use_alpha_beta = use_alpha_beta
+        self.__visualizer = visualizer
         self.set_max_depth(max_depth)
 
     def start_turn(self, create_new_thread = True):
@@ -25,8 +26,10 @@ class AI(Controller):
     def calculate_best_move(self):
         """Calculates the best possible move the AI can make and drops a coin there.
         """
+        self.__visualizer.set_enabled(True)
         best_move = self.start_minimax()
         self.__manager.end_turn(best_move)
+        self.__visualizer.set_enabled(False)
 
     def start_minimax(self):
         """Starts the minimax algorithm.
@@ -36,8 +39,10 @@ class AI(Controller):
         """
         best_list = []
         alpha = -10**6
-        for i in self.get_move_order():
+        for i in self.__board.get_legal_moves():
+            self.__visualizer.add_node(1, i)
             value = self.minimax(1, self.__max_depth, [i], alpha, 10**6)
+            self.__visualizer.add_value(value, 1, i)
 
             if value is None:
                 best_list.append((value, i))
@@ -67,13 +72,15 @@ class AI(Controller):
 
         best = None
 
-        for i in self.get_move_order():
+        for i in self.__board.get_legal_moves():
             if self.stop_ai_thread:
                 return None
 
             new_done_moves = done_moves.copy()
             new_done_moves.append(i)
+            self.__visualizer.add_node(depth + 1, i)
             value = self.minimax(depth + 1, max_depth, new_done_moves, alpha, beta)
+            self.__visualizer.add_value(value, depth + 1, i)
 
             if value is None:
                 continue
@@ -132,6 +139,7 @@ class AI(Controller):
             legal_moves = self.__board.get_legal_moves()
             return legal_moves[random.randint(0, len(legal_moves) - 1)]
 
+        self.__visualizer.add_value(best[0], 0, best[1])
         return best[1]
 
     def set_max_depth(self, depth):
@@ -139,6 +147,3 @@ class AI(Controller):
             raise ValueError("Maximum depth cannot be less than 1.")
 
         self.__max_depth = depth
-
-    def get_move_order(self):
-        return [3, 2, 4, 1, 5, 0, 6]
