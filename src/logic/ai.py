@@ -1,5 +1,6 @@
 import threading
 import random
+import time
 from src.logic.controller import Controller
 from src.logic.game_state import GameState
 
@@ -14,25 +15,41 @@ class AI(Controller):
         self.__visualizer = visualizer
         self.set_max_depth(max_depth)
 
-    def start_turn(self, create_new_thread = True):
-        """Starts the AI's calculations for its move. The calculations will be done in a new thread.
+    def start_turn(self, create_new_thread=True, use_iterative_deepening=True):
+        """Starts the AI's calculations for its move.
+
+        Args:
+            create_new_thread (bool): Whether to do the calculations in a new thread or the main thread.
+            use_iterative_deepening (bool): Whether to use iterative deepening or not.
         """
         if create_new_thread:
-            ai_thread = threading.Thread(target=self.calculate_best_move)
+            ai_thread = threading.Thread(target=self.calculate_best_move, args=[use_iterative_deepening])
             ai_thread.start()
         else:
-            self.calculate_best_move()
+            self.calculate_best_move(use_iterative_deepening)
 
-    def calculate_best_move(self):
+    def calculate_best_move(self, use_iterative_deepening=True):
         """Calculates the best possible move the AI can make and drops a coin there.
+
+        Args:
+            use_iterative_deepening (bool): Whether to use iterative deepening or not.
         """
         self.__visualizer.set_enabled(True)
-        best_move = self.start_minimax()
+
+        if use_iterative_deepening:
+            best_move = self.start_iterative_deepening()
+        else:
+            _, best_move = self.minimax(0, self.__max_depth, [], -10**6, 10**6)
+        
         self.__manager.end_turn(best_move)
         self.__visualizer.set_enabled(False)
 
-    def start_minimax(self):
+    # Obsolete method
+    def start_minimax(self, max_depth):
         """Starts the minimax algorithm.
+
+        Args:
+            max_depth (int): The maximum depth.
 
         Returns:
             int: The index of the column the best move was found in.
@@ -41,7 +58,7 @@ class AI(Controller):
         alpha = -10**6
         for i in self.__board.get_legal_moves():
             self.__visualizer.add_node(1, i)
-            value = self.minimax(1, self.__max_depth, [i], alpha, 10**6)
+            value = self.minimax(1, max_depth, [i], alpha, 10**6)
             self.__visualizer.add_value(value, 1, i)
 
             if value is None:
@@ -53,33 +70,49 @@ class AI(Controller):
 
         best_move = self.get_index_of_best(best_list)
         return best_move
+    
+    def start_iterative_deepening(self, time_limit=3):
+        start_time = time.time()
+        i = 1
+        column = None
+        while time.time() - start_time < time_limit:
+            _, new_column = self.minimax(0, i, [], -10**6, 10**6)
+
+            if new_column is None:
+                return column
+
+            column = new_column
+            i += 1
+
+        return column
 
     def minimax(self, depth, max_depth, done_moves, alpha, beta):
         """The minimax algorithm. Calculates the best possible move the AI can make.
 
         Args:
             depth (int): The current depth.
-            max_depth (int): The maximum depth
+            max_depth (int): The maximum depth.
             done_moves (list): List of moves (column indices) that are going to be evaluated.
             alpha (int): The alpha value for alpha-beta pruning.
             beta (int): The beta value for alpha-beta pruning.
 
         Returns:
-            int: The value of the best move.
+            tuple: The value and the column of the best move.
         """
         if depth == max_depth:
-            return self.calculate_value_for_game_state(done_moves)
+            return (self.calculate_value_for_game_state(done_moves), None)
 
         best = None
+        column = None
 
         for i in self.__board.get_legal_moves():
             if self.stop_ai_thread:
-                return None
+                return (None, None)
 
             new_done_moves = done_moves.copy()
             new_done_moves.append(i)
             self.__visualizer.add_node(depth + 1, i)
-            value = self.minimax(depth + 1, max_depth, new_done_moves, alpha, beta)
+            value, _ = self.minimax(depth + 1, max_depth, new_done_moves, alpha, beta)
             self.__visualizer.add_value(value, depth + 1, i)
 
             if value is None:
@@ -87,18 +120,25 @@ class AI(Controller):
 
             if best is None:
                 best = value
-
-            best = max(best, value) if depth % 2 == 0 else min(best, value)
+                column = i
 
             if depth % 2 == 0:
+                if value > best:
+                    column = i
+                    best = value
+
                 alpha = max(alpha, value)
             else:
+                if value < best:
+                    column = i
+                    best = value
+
                 beta = min(beta, value)
 
             if self.use_alpha_beta and alpha >= beta:
                 break
 
-        return best
+        return (best, column)
 
     def calculate_value_for_game_state(self, moves):
         """Calculates the value of the state of the game based on the given moves.

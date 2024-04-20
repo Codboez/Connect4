@@ -136,7 +136,7 @@ class TestAI(unittest.TestCase):
 
                 self.board.drop(i, player)
 
-        column = self.ai_choose_column(self.ai)
+        column = self.ai.start_iterative_deepening(0.5)
 
         self.assertEqual(column, 6)
 
@@ -189,9 +189,10 @@ class TestAI(unittest.TestCase):
         for _ in range(6):
             self.board.drop(0, 1)
 
-        value = self.ai.minimax(3, 3, [5, 3, 0], -10000, 10000)
+        value, column = self.ai.minimax(3, 3, [5, 3, 0], -10000, 10000)
 
         self.assertIsNone(value)
+        self.assertIsNone(column)
 
     @given(moves=strategies.lists(strategies.integers(min_value=0, max_value=6), min_size=0, max_size=30))
     @settings(max_examples=20, deadline=None)
@@ -207,8 +208,8 @@ class TestAI(unittest.TestCase):
         ai_no_pruning = AI(2, board, self.manager, 3, self.visualizer, False)
         ai_with_pruning = AI(2, board_copy, self.manager, 3, self.visualizer)
 
-        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=5)
-        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=5)
+        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False, False), number=5)
+        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False, False), number=5)
 
         self.assertGreaterEqual(no_pruning_time, with_pruning_time)
 
@@ -217,13 +218,13 @@ class TestAI(unittest.TestCase):
         ai_no_pruning = AI(2, self.board, self.manager, 5, self.visualizer, False)
         ai_with_pruning = AI(2, board_copy, self.manager, 5, self.visualizer)
 
-        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False), number=3)
-        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False), number=3)
+        no_pruning_time = timeit.timeit(lambda: ai_no_pruning.start_turn(False, False), number=3)
+        with_pruning_time = timeit.timeit(lambda: ai_with_pruning.start_turn(False, False), number=3)
 
         self.assertGreaterEqual(no_pruning_time / 10, with_pruning_time)
 
     def ai_choose_column(self, ai: AI):
-        ai.start_turn()
+        ai.start_turn(use_iterative_deepening=False)
 
         start_time = time.time()
 

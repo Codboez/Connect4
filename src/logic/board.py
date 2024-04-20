@@ -18,7 +18,7 @@ class Board:
 
         Args:
             x (int): x index of the column to drop the coin in
-            controller_number (int): Which player to check the win for. 1 for player 1. 2 for player 2.
+            controller_number (int): Which player's coin to drop. 1 for player 1. 2 for player 2.
 
         Raises:
             ValueError: Raised when the x index was out of range.
@@ -352,3 +352,10 @@ class Board:
 
     def get_move_order(self):
         return [3, 2, 4, 1, 5, 0, 6]
+    
+    def __str__(self):
+        s = ""
+        for row in self.__board_list:
+            s += "".join(row)
+
+        return s
