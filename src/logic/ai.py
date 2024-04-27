@@ -52,9 +52,8 @@ class AI(Controller):
         while time.time() - start_time < time_limit:
             if self.stop_ai_thread:
                 return (None, None)
-            
+
             _, column = self.minimax(0, i, self.__board, -10**6, 10**6, None, 0)
-            print(i)
 
             i += 1
 
