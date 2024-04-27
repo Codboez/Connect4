@@ -12,6 +12,7 @@ class AI(Controller):
         self.stop_ai_thread = False
         self.use_alpha_beta = use_alpha_beta
         self.__visualizer = visualizer
+        self.__best_moves = {}
         self.set_max_depth(max_depth)
 
     def start_turn(self, create_new_thread=True, use_iterative_deepening=True):
@@ -52,7 +53,6 @@ class AI(Controller):
                 return (None, None)
 
             _, column = self.minimax(0, i, self.__board, -10**6, 10**6, None, 0)
-            print(i)
 
             i += 1
 
@@ -74,14 +74,14 @@ class AI(Controller):
             tuple: The value and the column of the best move.
         """
         next_player = self.__index if depth % 2 == 1 else 3 - self.__index
-        legal_moves = board.get_legal_moves()
-
         score = self.calculate_value_for_game_state(board, next_player, drop_location, current_score)
 
         if next_player == self.__index:
             current_score += score
         else:
             current_score -= score
+
+        legal_moves = board.get_legal_moves(self.__best_moves.get(str(board), None))
 
         if depth == max_depth or score >= 1000 or len(legal_moves) == 0:
             return (current_score, None)
@@ -123,6 +123,8 @@ class AI(Controller):
 
             if self.use_alpha_beta and alpha >= beta:
                 break
+
+        self.__best_moves[str(board)] = column
 
         return (best, column)
 

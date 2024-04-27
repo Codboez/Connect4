@@ -337,14 +337,24 @@ class Board:
 
         return (lines_of_2, lines_of_3, lines_of_4)
 
-    def get_legal_moves(self):
+    def get_legal_moves(self, best_move = None):
         """Returns list of all currently possible moves.
+
+        Args:
+            best_move (int): The current best move. This move will be placed first in the list. None if not known.
 
         Returns:
             list: The list of all currently possible moves.
         """
         moves = []
+
+        if best_move is not None:
+            moves.append(best_move)
+
         for i in self.get_move_order():
+            if i == best_move:
+                continue
+
             if self.__board_list[0][i] == 0:
                 moves.append(i)
 
