@@ -136,7 +136,7 @@ class TestAI(unittest.TestCase):
 
                 self.board.drop(i, player)
 
-        column = self.ai.start_iterative_deepening(0.5)
+        column = self.ai_choose_column(self.ai)
 
         self.assertEqual(column, 6)
 
@@ -184,15 +184,6 @@ class TestAI(unittest.TestCase):
         column = self.ai_choose_column(ai)
 
         self.assertIn(column, [4, 5])
-
-    def test_minimax_returns_none_when_checking_illegal_move(self):
-        for _ in range(6):
-            self.board.drop(0, 1)
-
-        value, column = self.ai.minimax(3, 3, [5, 3, 0], -10000, 10000)
-
-        self.assertIsNone(value)
-        self.assertIsNone(column)
 
     @given(moves=strategies.lists(strategies.integers(min_value=0, max_value=6), min_size=0, max_size=30))
     @settings(max_examples=20, deadline=None)

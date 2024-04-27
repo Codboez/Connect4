@@ -26,3 +26,4 @@ max-line-length=120
 [DESIGN]
 max-args=10
 max-attributes=10
+max-locals=20

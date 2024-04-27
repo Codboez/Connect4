@@ -23,7 +23,7 @@ class Visualizer:
             return
 
         self.set_value(index, value)
-        time.sleep(0.01)
+        time.sleep(0.1)
 
     def add_node(self, depth, index):
         if not self.enabled:

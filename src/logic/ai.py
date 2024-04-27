@@ -1,5 +1,4 @@
 import threading
-import random
 import time
 from src.logic.controller import Controller
 from src.logic.game_state import GameState
@@ -39,80 +38,67 @@ class AI(Controller):
         if use_iterative_deepening:
             best_move = self.start_iterative_deepening()
         else:
-            _, best_move = self.minimax(0, self.__max_depth, [], -10**6, 10**6)
-        
+            _, best_move = self.minimax(0, self.__max_depth, self.__board, -10**6, 10**6, None, 0)
+
         self.__manager.end_turn(best_move)
         self.__visualizer.set_enabled(False)
 
-    # Obsolete method
-    def start_minimax(self, max_depth):
-        """Starts the minimax algorithm.
-
-        Args:
-            max_depth (int): The maximum depth.
-
-        Returns:
-            int: The index of the column the best move was found in.
-        """
-        best_list = []
-        alpha = -10**6
-        for i in self.__board.get_legal_moves():
-            self.__visualizer.add_node(1, i)
-            value = self.minimax(1, max_depth, [i], alpha, 10**6)
-            self.__visualizer.add_value(value, 1, i)
-
-            if value is None:
-                best_list.append((value, i))
-                continue
-
-            alpha = max(alpha, value)
-            best_list.append((value, i))
-
-        best_move = self.get_index_of_best(best_list)
-        return best_move
-    
     def start_iterative_deepening(self, time_limit=3):
         start_time = time.time()
         i = 1
         column = None
         while time.time() - start_time < time_limit:
-            _, new_column = self.minimax(0, i, [], -10**6, 10**6)
+            if self.stop_ai_thread:
+                return (None, None)
 
-            if new_column is None:
-                return column
+            _, column = self.minimax(0, i, self.__board, -10**6, 10**6, None, 0)
+            print(i)
 
-            column = new_column
             i += 1
 
         return column
 
-    def minimax(self, depth, max_depth, done_moves, alpha, beta):
+    def minimax(self, depth, max_depth, board, alpha, beta, drop_location, current_score):
         """The minimax algorithm. Calculates the best possible move the AI can make.
 
         Args:
             depth (int): The current depth.
             max_depth (int): The maximum depth.
-            done_moves (list): List of moves (column indices) that are going to be evaluated.
+            board (Board): The Connect Four board.
             alpha (int): The alpha value for alpha-beta pruning.
             beta (int): The beta value for alpha-beta pruning.
+            drop_location (tuple): The drop location on the board to evaluate.
+            current_score (int): The currently given score based on previous moves.
 
         Returns:
             tuple: The value and the column of the best move.
         """
-        if depth == max_depth:
-            return (self.calculate_value_for_game_state(done_moves), None)
+        next_player = self.__index if depth % 2 == 1 else 3 - self.__index
+        legal_moves = board.get_legal_moves()
+
+        score = self.calculate_value_for_game_state(board, next_player, drop_location, current_score)
+
+        if next_player == self.__index:
+            current_score += score
+        else:
+            current_score -= score
+
+        if depth == max_depth or score >= 1000 or len(legal_moves) == 0:
+            return (current_score, None)
 
         best = None
         column = None
+        next_player = 3 - next_player
 
-        for i in self.__board.get_legal_moves():
-            if self.stop_ai_thread:
-                return (None, None)
+        for i in legal_moves:
+            new_board = board.copy()
+            try:
+                drop_location = new_board.drop(i, next_player)
+            except ValueError:
+                continue
 
-            new_done_moves = done_moves.copy()
-            new_done_moves.append(i)
             self.__visualizer.add_node(depth + 1, i)
-            value, _ = self.minimax(depth + 1, max_depth, new_done_moves, alpha, beta)
+            value, _ = self.minimax(depth + 1, max_depth, new_board, alpha, beta, drop_location, current_score)
             self.__visualizer.add_value(value, depth + 1, i)
 
             if value is None:
@@ -140,47 +126,26 @@ class AI(Controller):
 
         return (best, column)
 
-    def calculate_value_for_game_state(self, moves):
+    def calculate_value_for_game_state(self, board, player, drop_location, current_score):
         """Calculates the value of the state of the game based on the given moves.
 
         Args:
-            moves (int): List of moves (column indices) that are being evaluated.
+            board (Board): The Connect Four board.
+            player (int): The player to check the value for. 1 for player 1. 2 for player 2.
+            drop_location (tuple): The drop location on the board to evaluate.
+            current_score (int): The currently given score based on previous moves.
 
         Returns:
             int: The value for the AI.
         """
+        if drop_location is None:
+            return current_score
+
         game_state = GameState()
 
-        try:
-            value = game_state.calculate_value_for_player(self.__index, self.__board, moves)
-        except ValueError:
-            return None
+        value = game_state.calculate_value_for_player(player, board, drop_location)
 
         return value
-
-    def get_index_of_best(self, best_list):
-        """Get the column index for the best move. 
-
-        Args:
-            best_list (list): List of values for each move
-
-        Returns:
-            int: The column index of the best move.
-        """
-        best = (-10000, -1)
-        for i in range(len(best_list)):
-            if best_list[i][0] is None:
-                continue
-
-            if best_list[i][0] > best[0]:
-                best = (best_list[i][0], best_list[i][1])
-
-        if best[1] == -1:
-            legal_moves = self.__board.get_legal_moves()
-            return legal_moves[random.randint(0, len(legal_moves) - 1)]
-
-        self.__visualizer.add_value(best[0], 0, best[1])
-        return best[1]
 
     def set_max_depth(self, depth):
         if depth < 1:

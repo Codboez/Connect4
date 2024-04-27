@@ -4,7 +4,7 @@ from src.logic.ai import AI
 class Manager:
     def __init__(self, board_ui, visualizer) -> None:
         self.__board_ui = board_ui
-        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 5, visualizer, True)]
+        self.controllers = [Player(), AI(2, self.__board_ui.board, self, 7, visualizer, True)]
         self.current_turn = 0
         self.active = True
         self.set_turn(0)
@@ -32,7 +32,7 @@ class Manager:
         self.current_turn = turn
 
         if isinstance(self.controllers[turn], AI):
-            self.controllers[turn].start_turn()
+            self.controllers[turn].start_turn(use_iterative_deepening=True)
 
     def end_turn(self, column):
         """Ends the current controller's turn. Ends the game upon win. Gives the other controller the turn otherwise.
