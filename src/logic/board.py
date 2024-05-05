@@ -337,7 +337,7 @@ class Board:
 
         return (lines_of_2, lines_of_3, lines_of_4)
 
-    def get_legal_moves(self, best_move = None):
+    def get_legal_moves(self, best_move = None, ordered = True):
         """Returns list of all currently possible moves.
 
         Args:
@@ -348,11 +348,16 @@ class Board:
         """
         moves = []
 
-        if best_move is not None:
+        if best_move is not None and ordered:
             moves.append(best_move)
 
-        for i in self.get_move_order():
-            if i == best_move:
+        if ordered:
+            move_order = self.get_move_order()
+        else:
+            move_order = range(7)
+
+        for i in move_order:
+            if i == best_move and ordered:
                 continue
 
             if self.__board_list[0][i] == 0:

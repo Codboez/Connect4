@@ -41,7 +41,7 @@ class BoardUI:
         to_delete = []
 
         for board_indices, screen_y in self.__active_coins.items():
-            self.__active_coins[board_indices] = screen_y + 1500 * self.__game.delta_time
+            self.__active_coins[board_indices] = screen_y + 2000 * self.__game.delta_time
 
             if self.__active_coins[board_indices] >= self.get_center_y(board_indices[1]):
                 to_delete.append(board_indices)

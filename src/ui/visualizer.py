@@ -184,3 +184,6 @@ class Visualizer:
         """
         self.__nodes = {}
         self.__nodes[()] = (None, self.get_position(()))
+
+    def flip_use_visualizer(self):
+        self.__use_visualizer = not self.__use_visualizer

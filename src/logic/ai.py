@@ -2,20 +2,21 @@ import threading
 import time
 from src.logic.controller import Controller
 from src.logic.game_state import GameState
+from src.logic.ai_settings import AISettings
 
 class AI(Controller):
-    def __init__(self, index, board, manager, max_depth, visualizer, use_alpha_beta=True) -> None:
+    def __init__(self, index, board, manager, max_depth, visualizer,
+                 use_alpha_beta=True, use_iterative_deepening=True) -> None:
         self.__index = index
         self.__board = board
         self.__manager = manager
-        self.__max_depth = 1
         self.stop_ai_thread = False
-        self.use_alpha_beta = use_alpha_beta
         self.__visualizer = visualizer
         self.__best_moves = {}
-        self.set_max_depth(max_depth)
+        self.__change_board = (False, None)
+        self.settings = AISettings(use_iterative_deepening, use_alpha_beta, max_depth, True)
 
-    def start_turn(self, create_new_thread=True, use_iterative_deepening=True):
+    def start_turn(self, create_new_thread=True):
         """Starts the AI's calculations for its move.
 
         Args:
@@ -23,12 +24,12 @@ class AI(Controller):
             use_iterative_deepening (bool): Whether to use iterative deepening or not.
         """
         if create_new_thread:
-            ai_thread = threading.Thread(target=self.calculate_best_move, args=[use_iterative_deepening])
+            ai_thread = threading.Thread(target=self.calculate_best_move)
             ai_thread.start()
         else:
-            self.calculate_best_move(use_iterative_deepening)
+            self.calculate_best_move()
 
-    def calculate_best_move(self, use_iterative_deepening=True):
+    def calculate_best_move(self):
         """Calculates the best possible move the AI can make and drops a coin there.
 
         Args:
@@ -36,13 +37,23 @@ class AI(Controller):
         """
         self.__visualizer.set_enabled(True)
 
-        if use_iterative_deepening:
+        if self.__change_board[0]:
+            self.__board = self.__change_board[1]
+            self.__change_board = (False, None)
+
+        if self.settings.iterative_deepening:
             best_move = self.start_iterative_deepening()
         else:
-            _, best_move = self.minimax(0, self.__max_depth, self.__board, -10**6, 10**6, None, 0)
+            _, best_move = self.minimax(0, self.settings.max_depth, self.__board, -10**6, 10**6, None, 0)
+
+        self.__visualizer.set_enabled(False)
+
+        if self.__change_board[0]:
+            self.__board = self.__change_board[1]
+            self.__change_board = (False, None)
+            return
 
         self.__manager.end_turn(best_move)
-        self.__visualizer.set_enabled(False)
 
     def start_iterative_deepening(self, time_limit=3):
         start_time = time.time()
@@ -82,7 +93,7 @@ class AI(Controller):
         else:
             current_score -= score
 
-        legal_moves = board.get_legal_moves(self.__best_moves.get(str(board), None))
+        legal_moves = board.get_legal_moves(self.__best_moves.get(str(board), None), self.settings.order_moves)
 
         if depth == max_depth or score >= 1000 or len(legal_moves) == 0:
             return (current_score, None)
@@ -122,7 +133,7 @@ class AI(Controller):
 
                 beta = min(beta, value)
 
-            if self.use_alpha_beta and alpha >= beta:
+            if self.settings.alpha_beta and alpha >= beta:
                 break
 
         self.__best_moves[str(board)] = column
@@ -150,8 +161,8 @@ class AI(Controller):
 
         return value
 
-    def set_max_depth(self, depth):
-        if depth < 1:
-            raise ValueError("Maximum depth cannot be less than 1.")
+    def set_board(self, board):
+        self.__change_board = (True, board)
 
-        self.__max_depth = depth
+    def get_settings(self):
+        return self.settings
