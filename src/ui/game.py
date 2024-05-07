@@ -41,6 +41,7 @@ class Game:
         self.__prev_update = time.time()
         self.board_ui.update()
         self.pause_menu.update(self.mouse_pos)
+        self.visualizer.update(self.mouse_pos)
 
     def run(self):
         """Starts the game.
@@ -60,17 +61,21 @@ class Game:
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.pause_menu.enabled:
                     self.pause_menu.mouse_down(event.pos)
+                elif self.visualizer.enabled:
+                    self.visualizer.mouse_down(event.pos)
                 else:
                     self.manager.mouse_down(event.pos)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.pause_menu.enabled = not self.pause_menu.enabled
+                elif self.pause_menu.enabled:
+                    self.pause_menu.key_down(event.unicode)
             elif event.type == pygame.MOUSEMOTION:
                 self.mouse_pos = event.pos
 
     def get_font_with_size(self, size):
         return pygame.font.Font(self.font_path, size)
-    
+
     def reset(self):
         board = Board()
         self.board_ui.board = board

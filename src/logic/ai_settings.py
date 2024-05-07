@@ -15,4 +15,16 @@ class AISettings:
         self.order_moves = not self.order_moves
 
     def set_max_depth(self, depth):
+        if not isinstance(depth, int):
+            try:
+                depth = int(depth())
+            except (TypeError, ValueError):
+                return
+
+        if depth < 1:
+            return
+
         self.max_depth = depth
+
+    def get_max_depth(self):
+        return self.max_depth

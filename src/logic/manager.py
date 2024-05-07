@@ -68,6 +68,8 @@ class Manager:
             self.controllers[1].set_board(board)
 
         self.set_turn(0)
+        self.active = True
+        self.__board_ui.winning_line = None
 
     def get_ai_settings(self):
         settings = []

@@ -21,7 +21,6 @@ class AI(Controller):
 
         Args:
             create_new_thread (bool): Whether to do the calculations in a new thread or the main thread.
-            use_iterative_deepening (bool): Whether to use iterative deepening or not.
         """
         if create_new_thread:
             ai_thread = threading.Thread(target=self.calculate_best_move)
@@ -31,9 +30,6 @@ class AI(Controller):
 
     def calculate_best_move(self):
         """Calculates the best possible move the AI can make and drops a coin there.
-
-        Args:
-            use_iterative_deepening (bool): Whether to use iterative deepening or not.
         """
         self.__visualizer.set_enabled(True)
 
@@ -41,12 +37,13 @@ class AI(Controller):
             self.__board = self.__change_board[1]
             self.__change_board = (False, None)
 
+        self.__best_moves = {}
+
         if self.settings.iterative_deepening:
             best_move = self.start_iterative_deepening()
         else:
-            _, best_move = self.minimax(0, self.settings.max_depth, self.__board, -10**6, 10**6, None, 0)
-
-        self.__visualizer.set_enabled(False)
+            value, best_move = self.minimax(0, self.settings.max_depth, self.__board, -10**6, 10**6, None, 0)
+            self.__visualizer.add_value(value, 0, 0)
 
         if self.__change_board[0]:
             self.__board = self.__change_board[1]

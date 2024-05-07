@@ -24,6 +24,6 @@ disable=raw-checker-failed,
 max-line-length=120
 
 [DESIGN]
-max-args=10
-max-attributes=10
+max-args=12
+max-attributes=13
 max-locals=20

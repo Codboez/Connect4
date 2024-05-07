@@ -1,5 +1,6 @@
 import time
-from pygame import draw, display
+from pygame import draw
+from src.ui.button import Button
 
 class Visualizer:
     def __init__(self, game, use_visualizer=False) -> None:
@@ -9,6 +10,9 @@ class Visualizer:
         self.__parent = []
         self.__prev_index = -1
         self.__use_visualizer = use_visualizer
+        self.__speed = 0.1
+        self.__continue_button = Button((self.__game.screen_width - 300, 100), (100, 50), (220, 220, 220),
+                                        "Continue", self.__game.font, lambda: self.set_enabled(False, 0))
         self.reset()
 
     def add_value(self, value, depth, index):
@@ -31,7 +35,7 @@ class Visualizer:
             return
 
         self.set_value(index, value)
-        time.sleep(0.1)
+        time.sleep(self.__speed)
 
     def add_node(self, depth, index):
         """Adds a node into the tree. If the depth is higher than that of the previously added node,
@@ -71,7 +75,7 @@ class Visualizer:
         except KeyError:
             pass
 
-        display.flip()
+        self.render_button(screen)
 
     def render_node(self, screen, node_path):
         """Renders a node into its location based on the give path of parents to this node.
@@ -99,6 +103,12 @@ class Visualizer:
             node_path (list): The path to the node. A list of column indices of all of this node's parents.
         """
         draw.line(screen, (0, 0, 0), self.get_parent_position(node_path), self.get_position(node_path))
+
+    def render_button(self, screen):
+        self.__continue_button.render(screen)
+
+    def update(self, mouse_pos):
+        self.__continue_button.update(mouse_pos)
 
     def set_value(self, index, value):
         """Sets a value to the node at the given child index of the current parent.
@@ -172,11 +182,12 @@ class Visualizer:
         parent_path = node_path[:-1]
         return self.calculate_position(parent_path)
 
-    def set_enabled(self, enabled):
+    def set_enabled(self, enabled, wait=1):
         if not self.__use_visualizer:
             return
-        time.sleep(1)
+        time.sleep(wait)
         self.enabled = enabled
+        print("a")
         self.reset()
 
     def reset(self):
@@ -187,3 +198,19 @@ class Visualizer:
 
     def flip_use_visualizer(self):
         self.__use_visualizer = not self.__use_visualizer
+
+    def set_speed(self, speed):
+        if not isinstance(speed, float):
+            try:
+                speed = float(speed())
+            except (TypeError, ValueError):
+                return
+
+        if speed < 0:
+            return
+
+        self.__speed = speed
+
+    def mouse_down(self, mouse_pos):
+        if self.__continue_button.is_inside(mouse_pos):
+            self.__continue_button.click()
